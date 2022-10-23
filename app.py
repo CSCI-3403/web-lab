@@ -1,48 +1,59 @@
 from dataclasses import dataclass, field
 import logging
 import re
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 from uuid import uuid4
 
 import click
 from flask import Flask, abort, redirect, render_template, request, session, url_for
 from werkzeug.wrappers import Response
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy # type: ignore
+from sqlalchemy.sql import func
 
 View = Union[Response, str, Tuple[str, int]]
 
 app = Flask(__name__)
 db = SQLAlchemy()
+app.config["SECRET_KEY"] = "asdfasdfasdfasdfasdf"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data/database.sqlite3"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
 
 @dataclass
-class Item(db.Model):
-    id: str = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    student: str = db.Column(db.Text)
-    name: str = db.Column(db.Text)
-    description: str = db.Column(db.Text)
-    image: str = db.Column(db.Text)
-    price: int = db.Column(db.Integer)
+class Item(db.Model): # type: ignore
+    __tablename__ = "items"
 
-class Review(db.Model):
-    id: str = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    student: str = db.Column(db.Text)
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    name = db.Column(db.Text)
+    description = db.Column(db.Text)
+    image = db.Column(db.Text)
+    price = db.Column(db.Integer)
 
-items = [
-    Item("bluemitten", "Blue Mitten", "For the coolest of cats", "blue_mitten.jpg", 10),
-    Item("redmitten", "Red Mitten", "Stylish, and affordable!", "red_mitten.jpg", 3),
-    Item("blanket", "Kitten Blanket", "Staying warm in style!", "blanket.jpg", 4),
-    Item("boots", "Tiny Lil' Boots", "Everyone loves boots", "boots.jpg", 15),
-    Item("scarf", "Warm Scarf", "For those chilly winter evenings", "scarf.jpg", 8),
-]
+@dataclass
+class Review(db.Model): # type: ignore
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    student = db.Column(db.Text)
+    item = db.Column(db.Text, db.ForeignKey('items.id'))
+    review = db.Column(db.Text)
+
+@dataclass
+class Purchase(db.Model): # type: ignore
+    __tablename__ = "purchases"
+
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    item = db.Column(db.Text, db.ForeignKey('items.id'))
+    quantity = db.Column(db.Integer)
+    student = db.Column(db.Text)
+    time = db.Column(db.DateTime, server_default=func.now())
+
+with app.app_context():
+    db.create_all()
 
 @app.before_request
 def set_id():
     if "id" not in session:
-        session["id"] = uuid4()
-
-def get_item(id: str) -> Item:
-    return [i for i in items if i.id == id][0]
-
+        session["id"] = str(uuid4())
+    
 def xss_escape(query: str, level: int) -> str:
     if level == 0:
         return query
@@ -59,22 +70,26 @@ def index() -> View:
     escaped_query = xss_escape(query, session.get("xss-level", 0))
 
     if not query:
-        results = items
+        results = db.session.query(Item).all()
     else:
-        results = [
-            item for item in items
-            if query.lower() in item.name.lower()
-            or query.lower() in item.description.lower()]
+        results = db.session.query(Item).filter(Item.name.like(f"%{query}%")).all()
+    
+    purchases = db.session.query(Purchase, Item) \
+        .filter(Purchase.student == session["id"]) \
+        .outerjoin(Item, Purchase.item == Item.id) \
+        .all()
+
 
     return render_template(
         "index.html",
         query=escaped_query,
         results=results,
-        top=items[0])
+        purchases=purchases,
+        top=db.session.query(Item).first())
 
-@app.route("/item/<id>")
-def item(id: str) -> View:
-    item = get_item(id)
+@app.route("/item/<int:item_id>")
+def item(item_id: int) -> View:
+    item = db.session.query(Item).filter(Item.id == item_id).first()
 
     return render_template(
         "item.html",
@@ -83,22 +98,37 @@ def item(id: str) -> View:
 
 @app.route("/review", methods=["POST"])
 def review() -> View:
-    id = request.form["item"]
+    item_id = request.form["item"]
     review = request.form["review"]
 
-    get_item(id).reviews.append(review)
+    db.session.add(Review(
+        student=session["id"],
+        item=item_id,
+        review=review,
+    ))
+    db.session.commit()
 
-    return redirect(url_for("item", id=id))
+    return redirect(url_for("item", item_id=item_id))
 
 @app.route("/purchase", methods=["POST"])
 def purchase() -> View:
-    item = get_item(request.form["item"])
+    item_id = request.form["item"]
     quantity = int(request.form["quantity"])
+
+    purchase = Purchase(
+        item=item_id,
+        quantity=quantity,
+        student=session["id"],
+    )
+    item = db.session.query(Item).filter(Item.id == item_id).first()
+
+    db.session.add(purchase)
+    db.session.commit()
 
     return render_template(
         "purchase.html",
+        purchase=purchase,
         item=item,
-        quantity=quantity,
     )
 
 @click.command()
