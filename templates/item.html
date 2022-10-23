@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="columns is-centered">
+    <div class="column is-half">
+        <a href="/" class="title is-4">&lt; Back</a>
+        <div class="card mt-5">
+            <div class="card-content">
+                <div class="media">
+                    <div class="media-left" style="width: 15rem">
+                        <figure class="image is-3by2">
+                            <img src="/static/{{ item.image }}">
+                        </figure>
+                    </div>
+                    <div class="media-content">
+                        <p class="title is-4">{{ item.name }}</p>
+                        <p class="subtitle is-6">{{ item.description }}</p>
+                        <p class="title is-4">${{ item.price }}</p>
+                        <form action="/purchase" method="POST">
+                            <div class="field has-addons">
+                                <input name="item" type="hidden" value="{{ item.id }}">
+                                <div class="control is-expanded">
+                                    <input name="quantity" type="number" class="input" value="1" min="1">
+                                </div>
+                                <div class="control">
+                                    <input type="submit" class="button is-info" value="Purchase">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="content">
+                    <h2 class="subtitle">Leave a review:</h2>
+                    <form action="/review" method="POST">
+                        <div class="field has-addons">
+                            <input name="item" type="hidden" value="{{ item.id }}">
+                            <div class="control is-expanded">
+                                <input type="text" class="input" name="review" required>
+                            </div>
+                            <div class="control">
+                                <input type="submit" class="button is-info" value="Purchase">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {% for review in item.reviews %}
+                <div class="card">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <figure class="image is-48x48">
+                                    <img src="/static/user.png">
+                                </figure>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-5">Anonymous</p>
+                                <p class="subtitle is-6">2022-01</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content">
+                            {{ review | safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

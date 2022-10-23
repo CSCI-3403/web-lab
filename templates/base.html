@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mittens4Kittens</title>
+    <script src="/static/fa.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/static/bulma.min.css">
+</head>
+<body class="container vertical">
+    <nav class="navbar mb-5 mt-5" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">
+                <img src="/static/logo.png">
+            </a>
+        </div>
+    </nav>
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
