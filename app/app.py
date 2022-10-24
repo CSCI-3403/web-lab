@@ -65,11 +65,23 @@ with app.app_context():
     db.session.merge(Item(id=5, name='Warm Scarf', description='For those chilly winter evenings', image='scarf.jpg', price=8))
     db.session.commit()
 
-def set_flag(id: str, level: int) -> None:
-    session[f"flag-{level}"] = "level1-ezpz"
+def set_level(level: int) -> None:
+    session["xss-level"] = level
 
-def get_flag() -> Optional[str]:
-    level = session.get("xss-level", 0)
+def get_level() -> int:
+    return session.get("xss-level", 0)
+
+def set_flag(id: str, level: int) -> None:
+    levels = {
+        0: "level0-ezpz",
+        1: "level1-scriptless",
+        2: "level2-sneaky",
+        3: "level3-zerostars",
+        4: "level4-toomuchtrust",
+    }
+    session[f"flag-{level}"] = levels.get(level)
+
+def get_flag(level: int) -> Optional[str]:
     return session.get(f"flag-{level}")
 
 @app.before_request
@@ -80,13 +92,22 @@ def set_id() -> None:
     if "id" not in session:
         session["id"] = str(uuid4())
 
+@app.context_processor
+def ctx() -> Dict[str, Any]:
+    level = get_level()
+    return {
+        "level": level,
+        "flag": get_flag(level)
+    }
+
 def xss_test(path: str) -> None:
     if "x-with-id" in request.headers:
         log.info("Skipping test (originated from xss test bot)")
         return
 
     url = "http://app" + path
-    level = session.get("xss-level", 0)
+    level = get_level()
+    log.info(f"Testing {session['id']}, level {level}")
     response = requests.post("http://xss-tester:8080/visit", json={
         "url": url,
         "headers": {
@@ -100,10 +121,10 @@ def xss_test(path: str) -> None:
         log.error(f"Test failed for url: {url}")
     else:
         log.info("Test passed!")
-        set_flag(session["id"], session.get("xss-level", 0))
+        set_flag(session["id"], get_level())
 
 def xss_escape(query: str) -> str:
-    level = session.get("xss-level", 0)
+    level = get_level()
     if level == 0:
         return query
     elif level == 1:
@@ -111,40 +132,27 @@ def xss_escape(query: str) -> str:
     elif level == 2:
         return re.sub(r"<[a-zA-Z]+>", "", query)
     else:
-        raise NotImplementedError(f"No XSS escape level #{level}")
-
-@app.context_processor
-def ctx() -> Dict[str, Any]:
-    print(session)
-    return {
-        "flag": get_flag()
-    }
+        return query.replace("<", "&lt;").replace(">", "&gt;")
 
 @app.route("/")
 def index() -> View:
-    print(session)
     query = request.args.get("query", "")
     escaped_query = xss_escape(query)
 
     if not query:
         results = db.session.query(Item).all()
     else:
-        xss_test("/?" + request.query_string.decode())
+        if get_level() <= 2:
+            xss_test("/?" + request.query_string.decode())
         results = db.session.query(Item).filter(Item.name.like(f"%{query}%")).all()
     
-    purchases = db.session.query(Purchase, Item) \
-        .filter(Purchase.student == session["id"]) \
-        .outerjoin(Item, Purchase.item == Item.id) \
-        .limit(5) \
-        .all()
 
     return render_template(
         "index.html",
-        query=escaped_query,
+        query=query,
+        escaped_query=escaped_query,
         results=results,
-        purchases=purchases,
-        top=db.session.query(Item).first(),
-        success=get_flag())
+        top=db.session.query(Item).first())
 
 @app.route("/item/<int:item_id>")
 def item(item_id: int) -> View:
@@ -171,7 +179,7 @@ def review() -> View:
     ))
     db.session.commit()
 
-    if "x-with-id" not in request.headers:
+    if get_level() >= 3:
         xss_test(url_for("item", item_id=item_id))
 
     return redirect(url_for("item", item_id=item_id))
@@ -197,6 +205,21 @@ def purchase() -> View:
         purchase=purchase,
         item=item,
     )
+
+@app.route("/clear", methods=["POST"])
+def clear() -> View:
+    db.session.query(Review).filter(Review.student == session["id"]).delete()
+    db.session.commit()
+
+    return redirect(url_for("index"))
+
+@app.route("/level", methods=["POST"])
+def level() -> View:
+    level = int(request.form.get("xss-level", 0))
+    set_level(level)
+    log.info(f"User {session['id']} switched to level {level}")
+
+    return redirect(url_for("index"))
 
 @click.command()
 @click.option("--debug", is_flag=True)
