@@ -1,2 +1,4 @@
 click
 flask
+flask-sqlalchemy
+requests

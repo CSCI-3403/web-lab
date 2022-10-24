@@ -17,5 +17,19 @@
     <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
+    {% if success %}
+    <div class="modal is-active">
+        <div class="modal-content">
+            <article class="message is-success">
+                <div class="message-header">
+                    <p>Success</p>
+                </div>
+                <div class="message-body">
+                    {{ success }}
+                </div>
+            </article>
+        </div>
+    </div>
+    {% endif %}
 </body>
 </html>

@@ -1,10 +1,18 @@
 version: '3.8'
 
 services:
-  server:
+  xss-tester:
+    build: xss_tester
+    ports:
+      - "8080:8080/tcp"
+    init: true
+  
+  app:
     build: .
     ports:
-      - 8018:80
+      - "8004:80"
+    external_links:
+        - xss-tester:xss-tester
     volumes:
       - ./data:/app/data
     init: true

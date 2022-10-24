@@ -7,6 +7,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-VOLUME data/ data/
-
 CMD [ "python3", "app.py", "--port", "80" ]

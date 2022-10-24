@@ -38,15 +38,15 @@
                                 <input type="text" class="input" name="review" required>
                             </div>
                             <div class="control">
-                                <input type="submit" class="button is-info" value="Purchase">
+                                <input type="submit" class="button is-info" value="Post Review">
                             </div>
                         </div>
                     </form>
                 </div>
-                {% for review in item.reviews %}
-                <div class="card">
-                    <div class="card-content">
-                        <div class="media">
+                {% for review in reviews %}
+                <div class="card mb-2">
+                    <div class="card-content p-4">
+                        <div class="media mb-1">
                             <div class="media-left">
                                 <figure class="image is-48x48">
                                     <img src="/static/user.png">
@@ -57,9 +57,8 @@
                                 <p class="subtitle is-6">2022-01</p>
                             </div>
                         </div>
-                        
                         <div class="content">
-                            {{ review | safe }}
+                            {{ review.review | safe }}
                         </div>
                     </div>
                 </div>
