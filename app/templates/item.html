@@ -31,7 +31,7 @@
                 </div>
                 <div class="content">
                     <h2 class="subtitle">Leave a review:</h2>
-                    <form action="/review" method="POST">
+                    <form id="review-form" action="/review" method="POST">
                         <div class="field has-addons">
                             <input name="item" type="hidden" value="{{ item.id }}">
                             <div class="control is-expanded">
@@ -42,6 +42,17 @@
                             </div>
                         </div>
                     </form>
+                    {% if level == 4 %}
+                    <script>
+                        document.getElementById('review-form').addEventListener('formdata', function(e) {
+                            const formData = e.formData;
+                            let review = formData.get('review');
+                            let safeReview = review.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+                            console.log(review, safeReview);
+                            formData.set('review', safeReview);
+                        });
+                    </script>
+                    {% endif %}
                 </div>
                 {% for review in reviews %}
                 <div class="card mb-2">

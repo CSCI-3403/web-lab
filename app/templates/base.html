@@ -5,8 +5,8 @@
     <title>Mittens4Kittens</title>
     <link rel="stylesheet" href="/static/bulma.min.css">
 </head>
-<body>
-    <nav class="container level mb-3 mt-2" role="navigation" aria-label="main navigation">
+<body class="container">
+    <nav class="level mb-3 mt-2" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <img src="/static/logo.png">
@@ -32,28 +32,27 @@
             </form>
         </div>
     </nav>
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
     {% if flag is not none %}
-    <footer style="position: absolute; bottom: 8px; left: 0; right: 0; width: 50%; margin: auto;">
-        <article class="message is-success">
+    <header>
+        <article class="message is-success mb-3">
             <div class="message-header">
-                <p>XSS Detected!</p>
+                <p>XSS successful! <i>(Enter this flag as your answer for this level on Canvas)</i></p>
             </div>
             <div class="message-body">
                 <div class="level">
                     <div class="level-left">
-                        <div class="is-size-5 mr-3">Your answer: <b>{{ flag }}</b></div>
+                        <div class="is-size-5 mr-3">Flag: <b>{{ flag }}</b></div>
                         <button class="button" onclick="navigator.clipboard.writeText('{{ flag }}'); this.classList.add('is-success'); this.innerText='Copied!';">
                             Copy to clipboard
                         </button>
                     </div>
                 </div>
-                <p><i>(Enter this as your answer for this level on Canvas)</i></p>
             </div>
         </article>
-    </footer>
+    </header>
     {% endif %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 </body>
 </html>

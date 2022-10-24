@@ -211,15 +211,20 @@ def clear() -> View:
     db.session.query(Review).filter(Review.student == session["id"]).delete()
     db.session.commit()
 
-    return redirect(url_for("index"))
+    return redirect(request.referrer or "/")
 
 @app.route("/level", methods=["POST"])
 def level() -> View:
     level = int(request.form.get("xss-level", 0))
     set_level(level)
+
+    # Remove existing reviews 
+    if level == 4:
+        clear()
+
     log.info(f"User {session['id']} switched to level {level}")
 
-    return redirect(url_for("index"))
+    return redirect(request.referrer or "/")
 
 @click.command()
 @click.option("--debug", is_flag=True)
