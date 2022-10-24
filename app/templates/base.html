@@ -6,30 +6,32 @@
     <script src="/static/fa.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/static/bulma.min.css">
 </head>
-<body class="container vertical">
-    <nav class="navbar mb-5 mt-5" role="navigation" aria-label="main navigation">
+<body>
+    <nav class="container mb-3 mt-2" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <img src="/static/logo.png">
             </a>
         </div>
     </nav>
-    <main class="flex-grow">
+    <main class="container">
         {% block content %}{% endblock %}
-    </main>
-    {% if session["flags"][level] %}
-    <div class="modal is-active">
-        <div class="modal-content">
+        {% if flag is not none %}
+        <footer style="position: absolute; bottom: 0; width: 100%;" class="p-6">
             <article class="message is-success">
                 <div class="message-header">
-                    <p>Success</p>
+                    <p>XSS Detected!</p>
                 </div>
                 <div class="message-body">
-                    {{ session["flags"][level] }}
+                    <p>Your answer: <b>{{ flag }}</b></p>
+                    <i>(Enter this as your answer for this level on Canvas)</i>
+                    <button class="button" onclick="navigator.clipboard.writeText('{{ flag }}'); this.classList.add('is-success'); this.innerText='Copied!';">
+                        Copy to clipboard
+                    </button>
                 </div>
             </article>
-        </div>
-    </div>
-    {% endif %}
+        </footer>
+        {% endif %}
+    </main>
 </body>
 </html>

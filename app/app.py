@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import logging
 import re
 import sys
-from typing import Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 from uuid import uuid4
 
 import click
@@ -65,14 +65,17 @@ with app.app_context():
     db.session.merge(Item(id=5, name='Warm Scarf', description='For those chilly winter evenings', image='scarf.jpg', price=8))
     db.session.commit()
 
-def get_answer(id: str, level: int) -> str:
-    return "Swordfish"
+def set_flag(id: str, level: int) -> None:
+    session[f"flag-{level}"] = "level1-ezpz"
+
+def get_flag() -> Optional[str]:
+    level = session.get("xss-level", 0)
+    return session.get(f"flag-{level}")
 
 @app.before_request
 def set_id() -> None:
-    if "flags" not in session:
-        session["flags"] = {}
     if "x-with-id" in request.headers:
+        session["xss-tester"] = "true"
         session["id"] = request.headers["x-with-id"]
     if "id" not in session:
         session["id"] = str(uuid4())
@@ -97,11 +100,7 @@ def xss_test(path: str) -> None:
         log.error(f"Test failed for url: {url}")
     else:
         log.info("Test passed!")
-        session["flags"][level] = get_answer(session["id"], session.get("xss-level", 0))
-
-def get_xss_status() -> Optional[str]:
-    level = session.get("xss-level", 0)
-    return session["flags"].get(level)
+        set_flag(session["id"], session.get("xss-level", 0))
 
 def xss_escape(query: str) -> str:
     level = session.get("xss-level", 0)
@@ -114,8 +113,16 @@ def xss_escape(query: str) -> str:
     else:
         raise NotImplementedError(f"No XSS escape level #{level}")
 
+@app.context_processor
+def ctx() -> Dict[str, Any]:
+    print(session)
+    return {
+        "flag": get_flag()
+    }
+
 @app.route("/")
 def index() -> View:
+    print(session)
     query = request.args.get("query", "")
     escaped_query = xss_escape(query)
 
@@ -137,7 +144,7 @@ def index() -> View:
         results=results,
         purchases=purchases,
         top=db.session.query(Item).first(),
-        success=get_xss_status())
+        success=get_flag())
 
 @app.route("/item/<int:item_id>")
 def item(item_id: int) -> View:

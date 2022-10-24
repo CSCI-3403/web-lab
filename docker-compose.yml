@@ -4,10 +4,11 @@ services:
   xss-tester:
     build: xss_tester
     expose:
-      - "8080:8080"
+      - "8080"
     external_links:
       - app:app
     init: true
+    restart: always
   
   app:
     build: app
@@ -19,3 +20,4 @@ services:
       - ./app:/app
       # - ./data:/app/data
     init: true
+    restart: always
