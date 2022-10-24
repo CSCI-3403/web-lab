@@ -65,6 +65,9 @@ with app.app_context():
     db.session.merge(Item(id=5, name='Warm Scarf', description='For those chilly winter evenings', image='scarf.jpg', price=8))
     db.session.commit()
 
+def get_answer(id: str, level: int) -> str:
+    return "Swordfish"
+
 @app.before_request
 def set_id() -> None:
     if "flags" not in session:
@@ -74,24 +77,27 @@ def set_id() -> None:
     if "id" not in session:
         session["id"] = str(uuid4())
 
-def xss_test(url: str) -> None:
+def xss_test(path: str) -> None:
     if "x-with-id" in request.headers:
         log.info("Skipping test (originated from xss test bot)")
         return
 
+    url = "http://app" + path
     level = session.get("xss-level", 0)
-    log.info("Starting test")
-    response = requests.post("http://localhost:8080/visit", json={
+    response = requests.post("http://xss-tester:8080/visit", json={
         "url": url,
         "headers": {
             "x-with-id": session["id"],
             "x-with-level": str(level),
         }
     })
-    log.info("Got test response")
-    if (response.status_code != 200
-        and PURCHASE_SUCCESS_STRING in response.json().get("source", "")):
-        session["flags"][level] = "You did an XSS!"
+    if response.status_code != 200:
+        log.error(f"Testing server error: {response.json().get('error')}")
+    elif PURCHASE_SUCCESS_STRING not in response.json().get("source", ""):
+        log.error(f"Test failed for url: {url}")
+    else:
+        log.info("Test passed!")
+        session["flags"][level] = get_answer(session["id"], session.get("xss-level", 0))
 
 def get_xss_status() -> Optional[str]:
     level = session.get("xss-level", 0)
@@ -116,7 +122,7 @@ def index() -> View:
     if not query:
         results = db.session.query(Item).all()
     else:
-        xss_test(request.url)
+        xss_test("/?" + request.query_string.decode())
         results = db.session.query(Item).filter(Item.name.like(f"%{query}%")).all()
     
     purchases = db.session.query(Purchase, Item) \

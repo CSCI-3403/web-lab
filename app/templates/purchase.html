@@ -13,7 +13,7 @@
                         </figure>
                     </div>
                     <div class="media-content">
-                        <p class="title is-4">Purchase successful!</p>
+                        <p class="title is-4">{{ success_string }}</p>
                         <p class="subtitle is-6">Ordered {{ purchase.quantity }} mitten{{ 's' if purchase.quantity != 1 else '' }}</p>
                         <p class="subtitle is-4">Total: ${{ purchase.quantity * item.price }}</p>
                     </div>
