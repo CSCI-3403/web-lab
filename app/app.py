@@ -85,7 +85,7 @@ def set_flag(id: str, level: int) -> None:
         4: ["tootrusting", "Tootrusting", "TOOTRUSTING", "TooTrusting"],
     }
     flag_options = flags.get(level, [])
-    uniquish_flag = flag_options[int(md5((id + str(level)).encode()).hexdigest()) % len(flag_options)]
+    uniquish_flag = flag_options[int(md5((id + str(level)).encode()).hexdigest(), 16) % len(flag_options)]
 
     flag = f"flag-{level}-{uniquish_flag}"
     session[f"flag-{level}"] = flag
