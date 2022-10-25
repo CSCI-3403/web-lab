@@ -13,6 +13,4 @@ COPY app.py .
 
 ADD bin /usr/bin
 
-VOLUME data/ data/
-
 CMD [ "python3", "app.py" ]
