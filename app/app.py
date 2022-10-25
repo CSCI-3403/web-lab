@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from hashlib import md5
 import logging
 import re
 import sys
@@ -72,14 +73,19 @@ def get_level() -> int:
     return session.get("xss-level", 0)
 
 def set_flag(id: str, level: int) -> None:
-    levels = {
-        0: "level0-ezpz",
-        1: "level1-scriptless",
-        2: "level2-sneaky",
-        3: "level3-zerostars",
-        4: "level4-toomuchtrust",
+    # A simple way to detect cheating- each flag will be mutated slightly.
+    flags = {
+        0: ["ezpz", "Ezpz", "EZPZ", "EzPz"],
+        1: ["looknoscript", "Looknoscript", "LOOKNOSCRIPT", "LookNoScript"],
+        2: ["veryclever", "Veryclever", "VERYCLEVER", "VeryClever"],
+        3: ["zerosstars", "Zerosstars", "ZEROSSTARS", "ZerosStars"],
+        4: ["tootrusting", "Tootrusting", "TOOTRUSTING", "TooTrusting"],
     }
-    session[f"flag-{level}"] = levels.get(level)
+    flag_options = flags.get(level, [])
+    uniquish_flag = flag_options[int(md5((id + str(level)).encode()).hexdigest()) % len(flag_options)]
+
+    flag = f"flag-{level}-{uniquish_flag}"
+    session[f"flag-{level}"] = flag
 
 def get_flag(level: int) -> Optional[str]:
     return session.get(f"flag-{level}")
@@ -211,7 +217,10 @@ def clear() -> View:
     db.session.query(Review).filter(Review.student == session["id"]).delete()
     db.session.commit()
 
-    return redirect(request.referrer or "/")
+    if request.referrer and request.host in request.referrer:
+        return redirect(request.referrer)
+    else:
+        return redirect(url_for("index"))
 
 @app.route("/level", methods=["POST"])
 def level() -> View:
@@ -224,7 +233,10 @@ def level() -> View:
 
     log.info(f"User {session['id']} switched to level {level}")
 
-    return redirect(request.referrer or "/")
+    if request.referrer and request.host in request.referrer:
+        return redirect(request.referrer)
+    else:
+        return redirect(url_for("index"))
 
 @click.command()
 @click.option("--debug", is_flag=True)
