@@ -124,8 +124,7 @@ def xss_test(path: str) -> None:
         log.info("Test passed!")
         set_flag(session["id"], get_level())
 
-def xss_escape(query: str) -> str:
-    level = get_level()
+def xss_escape(query: str, level: int) -> str:
     if level == 0:
         return query
     elif level == 1:
@@ -137,13 +136,15 @@ def xss_escape(query: str) -> str:
 
 @app.route("/")
 def index() -> View:
+    level = get_level()
+
     query = request.args.get("query", "")
-    escaped_query = xss_escape(query)
+    escaped_query = xss_escape(query, level)
 
     if not query:
         results = db.session.query(Item).all()
     else:
-        if get_level() <= 2:
+        if level <= 2 and get_flag(level) is None:
             xss_test("/?" + request.query_string.decode())
         results = db.session.query(Item).filter(Item.name.like(f"%{query}%")).all()
     
@@ -180,7 +181,8 @@ def review() -> View:
     ))
     db.session.commit()
 
-    if get_level() >= 3:
+    level = get_level()
+    if level >= 3 and get_flag(level) is None:
         xss_test(url_for("item", item_id=item_id))
 
     return redirect(url_for("item", item_id=item_id))
