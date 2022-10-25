@@ -47,16 +47,6 @@ class Review(db.Model): # type: ignore
     review = db.Column(db.Text)
     time = db.Column(db.DateTime, server_default=func.now())
 
-@dataclass
-class Purchase(db.Model): # type: ignore
-    __tablename__ = "purchases"
-
-    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    item = db.Column(db.Text, db.ForeignKey('items.id'))
-    quantity = db.Column(db.Integer)
-    student = db.Column(db.Text)
-    time = db.Column(db.DateTime, server_default=func.now())
-
 with app.app_context():
     db.create_all()
     db.session.merge(Item(id=1, name='Blue Mitten', description='For the coolest of cats', image='blue_mitten.jpg', price=10))
@@ -195,25 +185,13 @@ def review() -> View:
 
     return redirect(url_for("item", item_id=item_id))
 
-@app.route("/purchase", methods=["POST"])
-def purchase() -> View:
-    item_id = request.form["item"]
-    quantity = int(request.form["quantity"])
-
-    purchase = Purchase(
-        item=item_id,
-        quantity=quantity,
-        student=session["id"],
-    )
+@app.route("/purchase/<int:item_id>")
+def purchase(item_id: int) -> View:
     item = db.session.query(Item).filter(Item.id == item_id).first()
-
-    db.session.add(purchase)
-    db.session.commit()
 
     return render_template(
         "purchase.html",
         success_string=PURCHASE_SUCCESS_STRING,
-        purchase=purchase,
         item=item,
     )
 

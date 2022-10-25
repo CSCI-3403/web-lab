@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+<a href="/" class="title is-4">&lt; Back</a>
 <div class="columns is-centered">
-    <div class="column is-half">
-        <a href="/" class="title is-4">&lt; Back</a>
+    <div class="column is-two-thirds">
         <div class="card mt-5">
             <div class="card-content">
                 <div class="media">
@@ -16,12 +16,8 @@
                         <p class="title is-4">{{ item.name }}</p>
                         <p class="subtitle is-6">{{ item.description }}</p>
                         <p class="title is-4">${{ item.price }}</p>
-                        <form action="/purchase" method="POST">
+                        <form action="/purchase/{{ item.id }}">
                             <div class="field has-addons">
-                                <input name="item" type="hidden" value="{{ item.id }}">
-                                <div class="control is-expanded">
-                                    <input name="quantity" type="number" class="input" value="1" min="1">
-                                </div>
                                 <div class="control">
                                     <input id="purchase" type="submit" class="button is-info" value="Purchase">
                                 </div>

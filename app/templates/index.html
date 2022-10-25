@@ -21,10 +21,8 @@
                             </div>
                         </div>
                         <div class="content">
-                            <form action="/purchase" method="POST">
+                            <form action="/purchase/{{ top.id }}">
                                 <div class="field">
-                                    <input name="item" type="hidden" value="{{ top.id }}">
-                                    <input name="quantity" type="hidden" value="1">
                                     <div class="control">
                                         <input id="purchase" type="submit" class="button is-info is-fullwidth" value="Buy now!">
                                     </div>

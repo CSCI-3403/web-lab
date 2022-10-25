@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
+<a href="/" class="title is-4">&lt; Back</a>
 <div class="columns is-centered">
-    <div class="column is-half">
-        <a href="/" class="title is-4">&lt; Back</a>
-        <div class="card mt-5">
+    <div class="column">
+        <div class="card has-background-success-light mt-5">
             <div class="card-content">
                 <div class="media">
                     <div class="media-left" style="width: 15rem">
@@ -13,9 +13,9 @@
                         </figure>
                     </div>
                     <div class="media-content">
-                        <p class="title is-4">{{ success_string }}</p>
-                        <p class="subtitle is-6">Ordered {{ purchase.quantity }} mitten{{ 's' if purchase.quantity != 1 else '' }}</p>
-                        <p class="subtitle is-4">Total: ${{ purchase.quantity * item.price }}</p>
+                        <p class="title is-2">{{ success_string }}</p>
+                        <p class="subtitle is-4">Ordered {{ item.name }}</p>
+                        <p class="subtitle is-3">Total: ${{ item.price }}</p>
                     </div>
                 </div>
             </div>
