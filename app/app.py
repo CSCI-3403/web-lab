@@ -73,6 +73,8 @@ def set_level(level: int) -> None:
     session["xss-level"] = level
 
 def get_level() -> int:
+    if "x-with-level" in request.headers:
+        return int(request.headers["x-with-level"])
     return session.get("xss-level", 0)
 
 def set_flag(id: str, level: int) -> None:
