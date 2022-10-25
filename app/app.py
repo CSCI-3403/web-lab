@@ -52,7 +52,7 @@ with app.app_context():
     db.session.merge(Item(id=1, name='Blue Mitten', description='For the coolest of cats', image='blue_mitten.jpg', price=10))
     db.session.merge(Item(id=2, name='Red Mitten', description='Stylish, and affordable!', image='red_mitten.jpg', price=3))
     db.session.merge(Item(id=3, name='Kitten Blanket', description='Staying warm in style!', image='blanket.jpg', price=4))
-    db.session.merge(Item(id=4, name='Tiny Hat', description='Everyone loves small hats', image='hat.png', price=6))
+    db.session.merge(Item(id=4, name='Tiny Hat', description='Everyone loves small hats', image='hat.jpg', price=6))
     db.session.merge(Item(id=5, name='Little Jacket', description='It even comes with little pockets!', image='jacket.jpg', price=15))
     db.session.merge(Item(id=6, name='Warm Scarf', description='For those chilly winter evenings', image='scarf.jpg', price=8))
     db.session.commit()
