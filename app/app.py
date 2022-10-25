@@ -57,7 +57,7 @@ with app.app_context():
     db.session.merge(Item(id=6, name='Warm Scarf', description='For those chilly winter evenings', image='scarf.jpg', price=8))
     db.session.commit()
 
-TOP_ITEM = Item(id=4, name='Tiny Hat', description='Everyone loves small hats', image='hat.png', price=15)
+TOP_ITEM = Item(id=4, name='Tiny Hat', description='Everyone loves small hats', image='hat.jpg', price=6)
 
 def set_level(level: int) -> None:
     session["xss-level"] = level
